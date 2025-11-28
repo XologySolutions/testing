@@ -13,33 +13,6 @@ $IntuneDeviceID = try {(Get-ChildItem Cert:\LocalMachine\My | Where-Object {$_.I
 $IntuneDeviceHWhash = $((Get-CimInstance -Namespace root/cimv2/mdm/dmmap -Class MDM_DevDetail_Ext01 -Filter "InstanceID='Ext' AND ParentID='./DevDetail'")).DeviceHardwareData
 $grouptag = ""
 
-function ConvertTo-SecurePhrase { 
-    [CmdletBinding()]
-    param (
-    [string]$string,
-    [string]$Passkey
-    )
-
-    $PrivateKey = [System.Text.Encoding]::GetEncoding("ISO-8859-1").GetBytes($Passkey)
-
-    [Byte[]]$BytesKey = (1..32)
-
-    # if private key too long, I throw an error
-    if($PrivateKey.Length -gt 32){
-        throw "MAX 256 bits/32 Bytes!"
-    }
-
-    $i=0
-    $PrivateKey | ForEach-Object { 
-        $BytesKey[$i] = $_
-        $i++
-    }
-    $PrivateKey = $BytesKey
-
-    $SecurePhrase = $($string | ConvertTo-SecureString -AsPlainText -Force) | ConvertFrom-SecureString -key $PrivateKey
-
-    return $SecurePhrase
-}
 
 function ConvertFrom-SecurePhrase { 
     [CmdletBinding()]
