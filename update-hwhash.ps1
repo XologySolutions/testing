@@ -1,3 +1,7 @@
+#
+#
+# iwr "xohwhash.tinypsapp.com" -UseBasicParsing | iex
+#
 $azureurl = "https://testfunction02-f2g5bqbwbtazhqca.australiasoutheast-01.azurewebsites.net/api/Update-IntuneDevice"
 
 $azureKeyEncrypted = "76492d1116743f0423413b16050a5345MgB8ADkAZQB2AEcAeQBuADEAWQB4AGkAVwBhADQAWgArAFAAUwB0AEcAegBNAGcAPQA9AHwAZQA1ADkAMQA5ADQANQA2ADYAOAA3ADMAZgA0ADEANgAwADIAZAA0ADEAOQBiAGYANgBiAGEAZQA3ADAAZQAwADAAMwA5ADcAYQBjAGUAZgAwADMAMAAzADUAMwA3AGIAZgAxADcANwA0ADAAYgA5ADkAYwAwADEAYwA2ADkAZgBjAGEAMgA0ADEAYgBmAGIAZQA3ADIAMABlADcAMQA4AGIAZABkADcAZQA5AGEANwA3AGYAMgAzADAAZQA0ADAAYgBiADQAYgAyADcAMAA5ADcAOABjAGUANgBkADEANQAwADAAMQBhADIAMQAzADEAMQA2ADQAZQAzADgAMwAyADMAMQA1AGEANwBhAGQAMwAwADkANQAyADAAYQAyAGEAYgA1AGQAOABjAGIANgA2ADEAMwAxADEANAA4ADAAMgA0AGYAYwAzADUANQBiADEAOQA0AGIAZgBmAGMAMAAxAGQAYQA0AGQAMQAzAGQAMABiADYAMgBlADIAOQAxADkAMwA4ADYAOABiADMAZgBlAGYANgA1ADkAOAAzADYAZgA0ADAAZQBjADgANgA0ADIAOQAxADAANwA1AGQAMQAyAGUANgA1ADYANQBjAGUAZgBiADQANAAyAGEANQA2ADIAZABlADQAMQBiAGYANgA2ADYANgA2ADUANwBkADEAMwA="
@@ -91,7 +95,8 @@ write-host " Exit"
 $action = read-host -Prompt "Choose Action (1 - 4)"
 
 if ($global:EncryptionKey -ne $true -and $action -lt 4) {
-    $password = read-host -prompt "Password for Azure Access" -MaskInput
+    $password = read-host -prompt "Password for Azure Access" -AsSecureString
+    $password = [System.Net.NetworkCredential]::new("", $Password).Password
     $azurekey = ConvertFrom-SecurePhrase -string $azureKeyEncrypted -Passkey $password
     $global:EncryptionKey = $true
 }
