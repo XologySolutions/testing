@@ -1,11 +1,39 @@
-#
-#
-# iwr "xohwhash.tinypsapp.com" -UseBasicParsing | iex
-#
-$azureurl = "https://testfunction02-f2g5bqbwbtazhqca.australiasoutheast-01.azurewebsites.net/api/Update-IntuneDevice"
+<#	
+	.NOTES
+	===========================================================================
+	 Created on:   	25/11/2025
+	 Created by:   	Craig Cram
+	 Organization: 	Xology
+	 Filename:     	Update-HWHash.ps1
+	===========================================================================
+	.DESCRIPTION
+		The script will be downloaded with a single line on Windows 10/11 machines in the OOBE starting screen.
 
-[version]$version = 1.1
+        The Administrator will press Shift-F10 to open a command prompt and type the following commands:
+
+            powershell
+            iwr hwhashxo.tinypsapp.com -UseBasicParsing | iex
+
+        This will download the script from github and present a menu to add/check/update devices including Group Tags.
+
+        Note: This script usings an Azure Function app already confgiured with the rights to perform the actions.
+
+            Although the URL for the Azure Function is included in the script its been encrypted using a AES Key.
+            When the script is run, the admin is prompted to enter a password.  No other files are needed
+
+    .VERSION
+    ===========================================================================
+    V1.2        Updated with descrition for release
+	===========================================================================
+
+#>
+[version]$version = 1.2
+
+
+# Azure Config
+$azureurl = "https://testfunction02-f2g5bqbwbtazhqca.australiasoutheast-01.azurewebsites.net/api/Update-IntuneDevice"
 $azureKeyEncrypted = "76492d1116743f0423413b16050a5345MgB8ADkAbgBUAGQAcwBIAHcAZwBhAGIAbwBUAEgARAB2ADgAcABSAEUAOABxAEEAPQA9AHwAYwA3ADQAZQBiAGMANQBiAGUAZABjADYANAA1ADYAYQAwAGIAMQAyADcAYgBiADMAMAA1AGUANQAwAGEANgBlADcAYQBkADQAYwAzADIANwA0AGYAZQA5AGQAYgBkAGEAMwAwADgAMABiADYANwAzADMAZgA0ADYANgA2ADYAMQBmADMANQBmAGUANAAxAGEAMQBmADQAYgBhAGQAOQAyAGMAOQBmADAANABhADIAYQA0AGEAMQA4AGQANwBiADgAYgAwADQAYQBiAGUAZAA4AGIAZgBmADkANgAxADQAYgA1ADkAYwAyAGIAZAA2AGEAZQAyADQANQA1ADIAZgA4AGYAMABlADIANQA4ADIAOABmADEAZgAxADAANgBiADMAMgAzADkAZABlADAAOAA0AGUAZAA0AGEAOAAzADcANAA0AGEAMQAzADgANwAzADYAMgA3ADgAZQBlADYAYQA1AGMAYQBmAGQAMwBiADcANAAyADMAYQBjADAAZAA1ADcAZgBkADEAZgAwADQAZgA4ADAAYgA3AGMANwBjADgAYwA1ADEANAAyADcANABhAGEANAA1ADYAZAA2ADEANwBiADcAMABmAGEANAA0ADQANQBjAGYAYQA5ADcAYwAyAGYAZAA2AGUAZAA3AGIANgA0AGMANQAxADAAOQBhADEANwA="
+# This key is encrypted and needs the admin to enter a password before it can be used!
 
 $SerialNumber = (Get-CimInstance win32_bios).SerialNumber
 $Manufacturer = (Get-CimInstance Win32_ComputerSystem).Manufacturer  #dont use bios.Manufacturer its wrong
@@ -21,15 +49,10 @@ function ConvertFrom-SecurePhrase {
     [string]$string,
     [string]$Passkey
     )
-
     $PrivateKey = [System.Text.Encoding]::GetEncoding("ISO-8859-1").GetBytes($Passkey)
-
     [Byte[]]$BytesKey = (1..32)
-
     # if private key too long, I throw an error
-    if($PrivateKey.Length -gt 32){
-        throw "MAX 256 bits/32 Bytes!"
-    }
+    if($PrivateKey.Length -gt 32){ throw "MAX 256 bits/32 Bytes!"  }
 
     $i=0
     $PrivateKey | ForEach-Object { 
@@ -37,9 +60,7 @@ function ConvertFrom-SecurePhrase {
         $i++
     }
     $PrivateKey = $BytesKey
-
     $UnSecurePhrase = [System.Net.NetworkCredential]::new("", $($string | ConvertTo-SecureString -key $PrivateKey)).Password
-
     return $UnSecurePhrase
 }
 
@@ -69,7 +90,7 @@ write-host " Exit"
 $action = read-host -Prompt "Choose Action (1 - 4)"
 
 if ($global:EncryptionKey -ne $true -and $action -lt 4) {
-    $password = read-host -prompt "Password for Azure Access" -AsSecureString
+    $password = read-host -prompt "Password Phrase to Decrypt Script Keys" -AsSecureString
     $password = [System.Net.NetworkCredential]::new("", $Password).Password
     $azurekey = ConvertFrom-SecurePhrase -string $azureKeyEncrypted -Passkey $password
     $global:EncryptionKey = $true
@@ -90,7 +111,7 @@ switch ($action) {
         if ($result.Status -ne "DeviceNotFound") {
             $result
         } else {
-            write-host "Device not in Autopilot"
+            write-host "Device not in Autopilot" -ForegroundColor red
         }
             
     }
@@ -109,7 +130,7 @@ switch ($action) {
         if ($result.Status -ne "DeviceNotFound") {
             $result
         } else {
-            write-host "Device not in Autopilot"
+            write-host "Device not in Autopilot" -ForegroundColor red
         }
     }
     
